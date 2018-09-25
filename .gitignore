@@ -1,0 +1,5 @@
+*.env
+*.pem
+.env
+*.git
+settings.py
