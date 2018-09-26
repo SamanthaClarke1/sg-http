@@ -17,7 +17,7 @@ def connect():
 sg = connect()
 
 def needsParam(p):
-	return JsonResponse(json.dumps({'err': 'Please specify a request with the '+str(p)+' parameter.', 'errcode': 400}))
+	return jsonResponse(json.dumps({'err': 'Please specify a request with the '+str(p)+' parameter.', 'errcode': 400}))
 
 def jsonResponse(resp):
 	return HttpResponse(resp, content_type="application/json")
@@ -25,6 +25,9 @@ def jsonResponse(resp):
 def parseStrList(str):
 	list = ast.literal_eval(str)
 	return list
+
+def str2bool(str):
+	return str in ['true', 'True', '1']
 
 acceptableRequests = [
 	'find_one',
@@ -34,7 +37,9 @@ acceptableRequests = [
 	'readprefs',
 	'readactivitystream',
 	'textsearch',
-	'update'
+	'update',
+	'info',
+	'summarize'
 ]
 
 # Create your views here.
@@ -58,7 +63,20 @@ def index(request):
 	tincludeArchived = True
 	tadditionalPresets = None
 	tdata = None
+	tmeum = None
+	tgrouping = None
+	tsummaryFields = None
 
+	if('retiredonly' in request.GET):
+		tretiredonly = str2bool(request.GET['retiredonly'])
+	if('includearchived' in request.GET):
+		tincludeArchived = str2bool(request.GET['includearchived'])
+	if('summaryfields' in request.GET):
+		tsummaryFields = parseStrList(request.GET['summaryfields'])
+	if('grouping' in request.GET):
+		tgrouping = parseStrList(request.GET['grouping'])
+	if('meum' in request.GET):
+		tmeum = parseStrList(request.GET['meum'])
 	if('data' in request.GET):
 		tdata = parseStrList(request.GET['data'])
 	if('additionalpresets' in request.GET):
@@ -98,6 +116,18 @@ def index(request):
 				break
 		if(not isAccepted):
 			return jsonResponse(json.dumps({'err': 'Invalid request. Please choose from an acceptable request: '+str(acceptableRequests), 'errcode': 400}))
+
+	if(treq == 'info'):
+		result = sg.info()
+
+	if(treq == 'summarize'):
+		if(ttype == None):
+			return needsParam('type')
+		if(tfilters == None):
+			return needsParam('filters')
+		if(tsummaryFields == None):
+			return needsParam('summaryfields')
+		result = sg.summarize(ttype, tfilters, tsummaryFields, tfilterOperator, tgrouping, tincludeArchived)
 	
 	if(treq == 'update'):
 		if(ttype == None):
@@ -106,7 +136,7 @@ def index(request):
 			return needsParam('id')
 		if(tdata == None):
 			return needsParam('tdata')
-		result = sg.update(ttype, tid, tdata)
+		result = sg.update(ttype, tid, tdata, tmeum)
 
 	if(treq == 'textsearch'):
 		if(ttext == None):
