@@ -3,6 +3,7 @@
 ## Install
 This is just a django site, ensure that you have python (3.6 preferred) installed, along with django.
 If you dont, you can just run `pip install django`. That should get it.
+Make sure you also put SGURL, SGUSER and SGPASS in your .env
 
 Other dependencies:
 
@@ -20,6 +21,7 @@ Right now there aren't many language specific bindings, but I do intend on creat
 Shotgun Currently doesnt support using pure http for their api. It does however support python.
 Whilst you could make calls to shotgun directly, by reworking their python api,
 they still consistently make breaking changes to the way their HTTP calls work.
+
 In order to fix this, I have begun the development of a translation layer of sorts for the shotgun api.
 It runs a local server, and listens for your html requests, and does all the hard work for you, in python.
 
