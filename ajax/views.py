@@ -30,11 +30,10 @@ def str2bool(str):
 	return str in ['true', 'True', '1']
 
 acceptableRequests = [
-	'find_one',
+	'findone',
 	'find',
 	'delete',
 	'revive',
-	'readprefs',
 	'readactivitystream',
 	'textsearch',
 	'update',
@@ -53,12 +52,12 @@ def index(request):
 	tid = None
 	ttext = None
 	tprojids = None
-	tlimit = None
+	tlimit = 0
 	tentityTypes = None
 	tfields = None
 	torder = None
 	tfilterOperator = None
-	tpage = None
+	tpage = 0
 	tretiredonly = False
 	tincludeArchived = True
 	tadditionalPresets = None
@@ -93,7 +92,7 @@ def index(request):
 		tfilterOperator = request.GET['filteroperator']
 	if('page' in request.GET):
 		tpage = int(float(request.GET['page']))
-	if('target' in request.GET):
+	if('type' in request.GET):
 		ttype = request.GET['type']
 	if('id' in request.GET):
 		tid = int(float(request.GET['id']))
@@ -160,13 +159,13 @@ def index(request):
 
 	if(treq == 'find_one' or treq == 'find'):
 		if(ttype == None):
-			return needsParam('target')
+			return needsParam('type')
 		if(tfilters == None):
 			return needsParam('filters')
 		if(treq == 'find_one'):
-			result = sg.find_one(ttype, tfilters, tfields, torder, tlimit, tfilterOperator, tretiredonly, tpage, tincludeArchived, tadditionalPresets)
+			result = sg.find_one(ttype, tfilters, tfields, torder, tfilterOperator, tlimit, tretiredonly, tpage, tincludeArchived, tadditionalPresets)
 		if(treq == 'find'):
-			result = sg.find(ttype, tfilters, tfields, torder, tlimit, tfilterOperator, tretiredonly, tpage, tincludeArchived, tadditionalPresets)
+			result = sg.find(ttype, tfilters, tfields, torder, tfilterOperator, tlimit, tretiredonly, tpage, tincludeArchived, tadditionalPresets)
 
 	return jsonResponse(json.dumps({'err': '', 'errcode': 200, 'result': result}))
 		
