@@ -29,20 +29,64 @@ def parseStrList(str):
 acceptableRequests = [
 	'find_one',
 	'find',
-	'delete'
+	'delete',
+	'revive',
+	'readprefs',
+	'readactivitystream',
+	'textsearch',
+	'update'
 ]
 
 # Create your views here.
 def index(request):
+	result = None
+
 	tfilters = None
 	ttype = None
 	treq = None
+	tprefs = None
+	tid = None
+	ttext = None
+	tprojids = None
+	tlimit = None
+	tentityTypes = None
+	tfields = None
+	torder = None
+	tfilterOperator = None
+	tpage = None
+	tretiredonly = False
+	tincludeArchived = True
+	tadditionalPresets = None
+	tdata = None
+
+	if('data' in request.GET):
+		tdata = parseStrList(request.GET['data'])
+	if('additionalpresets' in request.GET):
+		tadditionalPresets = parseStrList(request.GET['additionalpresets'])
+	if('fields' in request.GET):
+		tfields = parseStrList(request.GET['fields'])
+	if('order' in request.GET):
+		torder = parseStrList(request.GET['order'])
 	if('filters' in request.GET):
 		tfilters = parseStrList(request.GET['filters'])
+	if('entitytypes' in request.GET):
+		tentitytypes = parseStrList(request.GET['entitytypes'])
+	if('filteroperator' in request.GET):
+		tfilterOperator = request.GET['filteroperator']
+	if('page' in request.GET):
+		tpage = int(float(request.GET['page']))
 	if('target' in request.GET):
 		ttype = request.GET['type']
 	if('id' in request.GET):
-		tid = request.GET['id']
+		tid = int(float(request.GET['id']))
+	if('prefs' in request.GET):
+		tprefs = request.GET['prefs']
+	if('text' in request.GET):
+		ttext = request.GET['text']
+	if('projectids' in request.GET):
+		tprojids = request.GET['projectids']
+	if('limit' in request.GET):
+		tlimit = int(float(request.GET['limit']))
 	if(not 'req' in request.GET):
 		return needsParam('req')
 	else:
@@ -55,25 +99,44 @@ def index(request):
 		if(not isAccepted):
 			return jsonResponse(json.dumps({'err': 'Invalid request. Please choose from an acceptable request: '+str(acceptableRequests), 'errcode': 400}))
 	
-	if(treq == 'delete'):
+	if(treq == 'update'):
+		if(ttype == None):
+			return needsParam('type')
+		if(tid == None):
+			return needsParam('id')
+		if(tdata == None):
+			return needsParam('tdata')
+		result = sg.update(ttype, tid, tdata)
+
+	if(treq == 'textsearch'):
+		if(ttext == None):
+			return needsParam('text')
+		if(tentityTypes == None):
+			return needsParam('entitytypes')
+		result = sg.text_search(ttext, tentityTypes, tprojids, tlimit)
+
+	if(treq == 'readprefs'):
+		result = sg.preferences_read(tprefs)
+	
+	if(treq == 'delete' or treq == 'revive' or treq == 'readactivitystream' or treq == 'textsearch'):
 		if(tid == None):
 			return needsParam('id')
 		if(treq == 'delete'):
-			sg.delete(ttarget, tid)
+			result = sg.delete(ttype, tid)
+		if(treq == 'revive'):
+			result = sg.revive(ttype, tid)
+		if(treq == 'readactivitystream'):
+			result = sg.activity_stream_read(ttype, tid)
 
 	if(treq == 'find_one' or treq == 'find'):
-		result = None
 		if(ttype == None):
 			return needsParam('target')
 		if(tfilters == None):
 			return needsParam('filters')
 		if(treq == 'find_one'):
-			print("\n\n\n")
-			print(tfilters[0])
-			print("\n\n\n")
-			result = sg.find_one(ttype, tfilters)
+			result = sg.find_one(ttype, tfilters, tfields, torder, tlimit, tfilterOperator, tretiredonly, tpage, tincludeArchived, tadditionalPresets)
 		if(treq == 'find'):
-			result = sg.find(ttype, tfilters)
+			result = sg.find(ttype, tfilters, tfields, torder, tlimit, tfilterOperator, tretiredonly, tpage, tincludeArchived, tadditionalPresets)
 
-		return jsonResponse(json.dumps({'err': '', 'errcode': 200, 'result': result}))
+	return jsonResponse(json.dumps({'err': '', 'errcode': 200, 'result': result}))
 		
