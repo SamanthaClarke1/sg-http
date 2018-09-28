@@ -167,5 +167,19 @@ def index(request):
 		if(treq == 'find'):
 			result = sg.find(ttype, tfilters, tfields, torder, tfilterOperator, tlimit, tretiredonly, tpage, tincludeArchived, tadditionalPresets)
 
+	try:
+		for i in range(0, len(result)):
+			try:
+				result[i]['stype'] = result[i]['type']
+				result[i].pop('type', None)
+			except:
+				print("No type attr found in result")
+	except:
+		try:
+			result['stype'] = result['type']
+			result.pop('type', None)
+		except:
+			print("No type attr found in result")
+
 	return jsonResponse(json.dumps({'err': '', 'errcode': 200, 'result': result}))
 		
